@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MBTI Personality Test</title>
+<meta name="description" content="A free 40-question personality test based on the four MBTI dimensions.">
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #ffffff; --ink: #1f2328; --muted: #6b7280; --line: #e5e3dc;
+    --accent: #3b5bdb; --accent-soft: #e7ecff;
+    --e: #e8590c; --i: #1971c2; --s: #2b8a3e; --n: #9c36b5; --t: #0b7285; --f: #c2255c; --j: #5c940d; --p: #e67700;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #15171c; --card: #1e2128; --ink: #e8e9ec; --muted: #9aa0aa; --line: #2e323b; --accent: #748ffc; --accent-soft: #252d4a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+         background: var(--bg); color: var(--ink); line-height: 1.55; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+  header h1 { font-size: 2rem; margin: 0 0 6px; letter-spacing: -0.02em; }
+  header p { margin: 0; color: var(--muted); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 28px; margin-top: 24px; }
+  .btn { appearance: none; border: 0; background: var(--accent); color: #fff; font-size: 1rem; font-weight: 600;
+         padding: 12px 22px; border-radius: 10px; cursor: pointer; }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
+  .btn:disabled { opacity: .4; cursor: not-allowed; }
+  .hidden { display: none !important; }
+
+  .progress { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
+  .progress > div { height: 100%; background: var(--accent); width: 0; transition: width .25s; }
+  .meta { display: flex; justify-content: space-between; color: var(--muted); font-size: .9rem; }
+
+  .q { font-size: 1.25rem; font-weight: 600; margin: 22px 0 26px; min-height: 3.2em; }
+  .scale { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .scale .lbl { font-size: .85rem; color: var(--muted); width: 70px; }
+  .scale .lbl.r { text-align: right; }
+  .dots { display: flex; gap: 10px; align-items: center; flex: 1; justify-content: center; }
+  .dot { border-radius: 50%; border: 2px solid var(--line); background: transparent; cursor: pointer; transition: transform .1s, background .15s, border-color .15s; }
+  .dot:hover { transform: scale(1.08); border-color: var(--accent); }
+  .dot.sel { background: var(--accent); border-color: var(--accent); }
+  .dot[data-v="-3"], .dot[data-v="3"] { width: 46px; height: 46px; }
+  .dot[data-v="-2"], .dot[data-v="2"] { width: 38px; height: 38px; }
+  .dot[data-v="-1"], .dot[data-v="1"] { width: 30px; height: 30px; }
+  .dot[data-v="0"] { width: 24px; height: 24px; }
+  .nav { display: flex; justify-content: space-between; margin-top: 30px; }
+
+  .type { font-size: 4rem; font-weight: 800; letter-spacing: .06em; margin: 0; line-height: 1; }
+  .nick { font-size: 1.3rem; color: var(--accent); font-weight: 600; margin: 8px 0 16px; }
+  .bars { margin: 24px 0; display: grid; gap: 16px; }
+  .bar .ends { display: flex; justify-content: space-between; font-size: .9rem; font-weight: 600; }
+  .bar .track { position: relative; height: 12px; border-radius: 99px; background: var(--line); margin-top: 6px; overflow: hidden; }
+  .bar .fill { position: absolute; top: 0; height: 100%; border-radius: 99px; }
+  .bar .mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 2px; background: var(--card); }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .grid2 h3 { margin: 0 0 6px; font-size: 1rem; }
+  .grid2 ul { margin: 0; padding-left: 18px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .chip { background: var(--accent-soft); color: var(--accent); padding: 4px 10px; border-radius: 99px; font-size: .85rem; font-weight: 600; }
+  .types { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+  .types button { background: var(--bg); border: 1px solid var(--line); color: var(--ink); border-radius: 10px; padding: 10px 4px; cursor: pointer; font-weight: 700; }
+  .types button.me { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .note { font-size: .82rem; color: var(--muted); margin-top: 28px; }
+  @media (max-width: 560px) {
+    .grid2 { grid-template-columns: 1fr; }
+    .scale .lbl { display: none; }
+    .dots { gap: 6px; }
+    .type { font-size: 3rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>MBTI Personality Test</h1>
+    <p>40 statements · about 7 minutes · nothing leaves your browser</p>
+  </header>
+
+  <!-- Intro -->
+  <section id="intro" class="card">
+    <h2 style="margin-top:0">How it works</h2>
+    <p>For each statement, pick how much you agree. Answer as you usually are, not as you'd like to be. There are no right answers.</p>
+    <p>The test scores you on four dimensions:</p>
+    <ul>
+      <li><b>E / I</b> — Extraversion vs. Introversion: where you get your energy</li>
+      <li><b>S / N</b> — Sensing vs. Intuition: how you take in information</li>
+      <li><b>T / F</b> — Thinking vs. Feeling: how you make decisions</li>
+      <li><b>J / P</b> — Judging vs. Perceiving: how you approach structure</li>
+    </ul>
+    <button class="btn" id="startBtn">Start the test</button>
+    <button class="btn ghost hidden" id="resumeBtn" style="margin-left:8px">Resume</button>
+  </section>
+
+  <!-- Quiz -->
+  <section id="quiz" class="card hidden">
+    <div class="meta"><span id="qnum"></span><span id="pct"></span></div>
+    <div class="progress"><div id="bar"></div></div>
+    <div class="q" id="qtext"></div>
+    <div class="scale">
+      <span class="lbl">Disagree</span>
+      <div class="dots" id="dots"></div>
+      <span class="lbl r">Agree</span>
+    </div>
+    <div class="nav">
+      <button class="btn ghost" id="backBtn">← Back</button>
+      <button class="btn" id="nextBtn" disabled>Next →</button>
+    </div>
+  </section>
+
+  <!-- Result -->
+  <section id="result" class="card hidden">
+    <div style="color:var(--muted);font-weight:600">Your type</div>
+    <p class="type" id="rType"></p>
+    <div class="nick" id="rNick"></div>
+    <p id="rDesc"></p>
+    <div class="bars" id="rBars"></div>
+    <div class="grid2">
+      <div><h3>Strengths</h3><ul id="rStr"></ul></div>
+      <div><h3>Watch out for</h3><ul id="rWeak"></ul></div>
+    </div>
+    <h3 style="margin:22px 0 0;font-size:1rem">Careers that often fit</h3>
+    <div class="chips" id="rCareers"></div>
+    <h3 style="margin:26px 0 0;font-size:1rem">Explore all 16 types</h3>
+    <div class="types" id="allTypes"></div>
+    <div class="nav">
+      <button class="btn ghost" id="retakeBtn">Retake test</button>
+      <button class="btn" id="shareBtn">Copy result</button>
+    </div>
+  </section>
+
+  <p class="note">This is an informal self-reflection tool inspired by the Myers–Briggs model. It is not the official MBTI® assessment and should not be used for clinical, hiring, or other high-stakes decisions.</p>
+</div>
+
+<script>
+// Each question: text, dimension, and which pole "agree" points to.
+const QUESTIONS = [
+  // E / I
+  ["I feel energized after spending time with a large group of people.", "EI", "E"],
+  ["I prefer to think things through quietly before I speak.", "EI", "I"],
+  ["I easily start conversations with strangers.", "EI", "E"],
+  ["After a busy social week, I need time alone to recharge.", "EI", "I"],
+  ["I enjoy being the center of attention.", "EI", "E"],
+  ["I have a few close friends rather than a wide circle of acquaintances.", "EI", "I"],
+  ["I think best when I talk ideas out loud with others.", "EI", "E"],
+  ["I prefer working on my own over working in a team.", "EI", "I"],
+  ["At parties, I tend to stay until the end.", "EI", "E"],
+  ["I find phone calls more draining than messages.", "EI", "I"],
+  // S / N
+  ["I focus on facts and details more than on the big picture.", "SN", "S"],
+  ["I often find myself imagining future possibilities.", "SN", "N"],
+  ["I trust experience more than theories.", "SN", "S"],
+  ["I enjoy exploring abstract ideas, even with no practical use.", "SN", "N"],
+  ["I prefer step-by-step instructions over figuring it out as I go.", "SN", "S"],
+  ["I often notice patterns and connections others miss.", "SN", "N"],
+  ["I would describe myself as practical and down-to-earth.", "SN", "S"],
+  ["I get bored with routine and want to try new approaches.", "SN", "N"],
+  ["I remember specific details of past events clearly.", "SN", "S"],
+  ["I like metaphors and reading between the lines.", "SN", "N"],
+  // T / F
+  ["When making decisions, logic matters more to me than feelings.", "TF", "T"],
+  ["I consider how my decisions will affect other people's feelings.", "TF", "F"],
+  ["I'd rather be honest than tactful.", "TF", "T"],
+  ["I find it hard to criticize others, even when it's deserved.", "TF", "F"],
+  ["I enjoy debating, even about things I don't care much about.", "TF", "T"],
+  ["Keeping harmony in a group is very important to me.", "TF", "F"],
+  ["I judge ideas by whether they are consistent and make sense.", "TF", "T"],
+  ["I'm easily moved by other people's stories.", "TF", "F"],
+  ["Fairness means applying the same rules to everyone.", "TF", "T"],
+  ["I often follow my heart over my head.", "TF", "F"],
+  // J / P
+  ["I like to have a plan and stick to it.", "JP", "J"],
+  ["I prefer to keep my options open rather than commit early.", "JP", "P"],
+  ["I finish tasks well before the deadline.", "JP", "J"],
+  ["I work best in bursts of energy, often close to the deadline.", "JP", "P"],
+  ["My workspace is usually tidy and organized.", "JP", "J"],
+  ["I enjoy spontaneous trips and last-minute plans.", "JP", "P"],
+  ["I make to-do lists and enjoy checking things off.", "JP", "J"],
+  ["Rules and schedules feel restrictive to me.", "JP", "P"],
+  ["I feel uneasy when things are left undecided.", "JP", "J"],
+  ["I adapt easily when plans suddenly change.", "JP", "P"],
+];
+
+const TYPES = {
+  INTJ: ["The Architect", "Strategic, independent thinkers who see how systems fit together and enjoy turning long-range visions into workable plans.", ["Strategic planning", "Independent", "High standards", "Decisive"], ["Can seem distant", "Impatient with inefficiency", "Overly critical"], ["Engineer", "Scientist", "Strategist", "Software architect"]],
+  INTP: ["The Logician", "Curious analysts who love ideas for their own sake, seeking precise explanations and elegant models of how things work.", ["Analytical", "Original", "Open-minded", "Objective"], ["Absent-minded", "Can overthink", "Neglects routine tasks"], ["Researcher", "Programmer", "Mathematician", "Philosopher"]],
+  ENTJ: ["The Commander", "Bold, organized leaders who set clear goals, mobilize people, and drive toward results efficiently.", ["Natural leader", "Efficient", "Confident", "Long-term focus"], ["Can be domineering", "Impatient", "Dismissive of emotions"], ["Executive", "Entrepreneur", "Consultant", "Lawyer"]],
+  ENTP: ["The Debater", "Quick-witted innovators who enjoy challenging assumptions, sparring with ideas, and spotting new possibilities.", ["Inventive", "Quick thinker", "Energetic", "Adaptable"], ["Argumentative", "Loses interest fast", "Struggles with follow-through"], ["Entrepreneur", "Product designer", "Marketer", "Inventor"]],
+  INFJ: ["The Advocate", "Insightful idealists with a quiet determination to help others and make a meaningful difference.", ["Insightful", "Principled", "Compassionate", "Creative"], ["Perfectionistic", "Burns out easily", "Very private"], ["Counselor", "Writer", "Psychologist", "Teacher"]],
+  INFP: ["The Mediator", "Imaginative, values-driven individuals who seek authenticity and look for the good in people and ideas.", ["Empathetic", "Creative", "Idealistic", "Open-minded"], ["Self-critical", "Impractical", "Avoids conflict"], ["Writer", "Designer", "Social worker", "Artist"]],
+  ENFJ: ["The Protagonist", "Charismatic, caring organizers who inspire others and enjoy helping people grow.", ["Inspiring", "Empathetic", "Organized", "Reliable"], ["Overly selfless", "Sensitive to criticism", "Can be controlling"], ["Teacher", "HR manager", "Coach", "Public relations"]],
+  ENFP: ["The Campaigner", "Enthusiastic, creative free spirits who connect easily with people and see life full of possibilities.", ["Enthusiastic", "Curious", "Sociable", "Imaginative"], ["Easily distracted", "Overcommits", "Dislikes routine"], ["Journalist", "Entrepreneur", "Actor", "Counselor"]],
+  ISTJ: ["The Logistician", "Responsible, thorough realists who value duty, order, and doing things right the first time.", ["Dependable", "Detail-oriented", "Honest", "Organized"], ["Rigid", "Resistant to change", "Judgmental"], ["Accountant", "Auditor", "Engineer", "Administrator"]],
+  ISFJ: ["The Defender", "Warm, dedicated protectors who quietly take care of people and keep things running smoothly.", ["Supportive", "Reliable", "Patient", "Observant"], ["Takes things personally", "Overloads self", "Reluctant to change"], ["Nurse", "Teacher", "Librarian", "Social worker"]],
+  ESTJ: ["The Executive", "Practical, direct organizers who bring order, enforce standards, and get things done.", ["Organized", "Dedicated", "Direct", "Strong-willed"], ["Inflexible", "Stubborn", "Struggles with emotions"], ["Manager", "Judge", "Project manager", "Military officer"]],
+  ESFJ: ["The Consul", "Sociable, caring helpers who are attentive to others' needs and keen to create harmony.", ["Caring", "Loyal", "Practical", "Good at connecting"], ["Needs approval", "Worries about status", "Avoids conflict"], ["Nurse", "Event planner", "Teacher", "Customer success"]],
+  ISTP: ["The Virtuoso", "Bold, practical experimenters who love understanding how things work by taking them apart.", ["Hands-on", "Calm in crisis", "Rational", "Flexible"], ["Private", "Easily bored", "Risk-taking"], ["Mechanic", "Pilot", "Engineer", "Forensic scientist"]],
+  ISFP: ["The Adventurer", "Gentle, sensitive artists who live in the moment and express themselves through action and beauty.", ["Artistic", "Kind", "Flexible", "Passionate"], ["Unpredictable", "Easily stressed", "Dislikes planning"], ["Designer", "Musician", "Photographer", "Veterinarian"]],
+  ESTP: ["The Entrepreneur", "Energetic, perceptive doers who enjoy action, risk, and solving problems on the spot.", ["Bold", "Practical", "Perceptive", "Sociable"], ["Impatient", "Risk-prone", "Misses the big picture"], ["Sales", "Paramedic", "Entrepreneur", "Athlete"]],
+  ESFP: ["The Entertainer", "Spontaneous, lively people who love life, people, and bringing fun into any situation.", ["Fun-loving", "Observant", "Generous", "Excellent people skills"], ["Easily bored", "Avoids long-term planning", "Sensitive"], ["Performer", "Event host", "Tour guide", "Sales"]],
+};
+
+const POLES = { EI: ["E", "I", "Extraversion", "Introversion", "--e", "--i"], SN: ["S", "N", "Sensing", "Intuition", "--s", "--n"],
+                TF: ["T", "F", "Thinking", "Feeling", "--t", "--f"], JP: ["J", "P", "Judging", "Perceiving", "--j", "--p"] };
+
+const STORE = "mbti-answers-v1";
+let answers = new Array(QUESTIONS.length).fill(null);
+let idx = 0;
+
+const $ = id => document.getElementById(id);
+function show(id) { ["intro", "quiz", "result"].forEach(s => $(s).classList.toggle("hidden", s !== id)); window.scrollTo(0, 0); }
+function save() { try { localStorage.setItem(STORE, JSON.stringify(answers)); } catch (e) {} }
+function load() { try { const a = JSON.parse(localStorage.getItem(STORE)); if (Array.isArray(a) && a.length === QUESTIONS.length) return a; } catch (e) {} return null; }
+
+function renderQ() {
+  const [text] = QUESTIONS[idx];
+  $("qnum").textContent = `Question ${idx + 1} of ${QUESTIONS.length}`;
+  const done = answers.filter(a => a !== null).length;
+  $("pct").textContent = Math.round(done / QUESTIONS.length * 100) + "%";
+  $("bar").style.width = (done / QUESTIONS.length * 100) + "%";
+  $("qtext").textContent = text;
+  const dots = $("dots"); dots.innerHTML = "";
+  [-3, -2, -1, 0, 1, 2, 3].forEach(v => {
+    const b = document.createElement("button");
+    b.className = "dot" + (answers[idx] === v ? " sel" : "");
+    b.dataset.v = v;
+    b.setAttribute("aria-label", ["Strongly disagree", "Disagree", "Slightly disagree", "Neutral", "Slightly agree", "Agree", "Strongly agree"][v + 3]);
+    b.onclick = () => { answers[idx] = v; save(); renderQ(); setTimeout(next, 180); };
+    dots.appendChild(b);
+  });
+  $("backBtn").disabled = idx === 0;
+  $("nextBtn").disabled = answers[idx] === null;
+  $("nextBtn").textContent = idx === QUESTIONS.length - 1 ? "See result →" : "Next →";
+}
+
+function next() {
+  if (answers[idx] === null) return;
+  if (idx < QUESTIONS.length - 1) { idx++; renderQ(); }
+  else if (answers.every(a => a !== null)) showResult();
+  else { idx = answers.findIndex(a => a === null); renderQ(); }
+}
+
+function score() {
+  const s = { EI: 0, SN: 0, TF: 0, JP: 0 }, max = { EI: 0, SN: 0, TF: 0, JP: 0 };
+  QUESTIONS.forEach(([, dim, pole], i) => {
+    const sign = pole === POLES[dim][0] ? 1 : -1;  // positive = first letter
+    s[dim] += sign * (answers[i] || 0); max[dim] += 3;
+  });
+  const pct = {}; let type = "";
+  for (const d in s) {
+    pct[d] = Math.round(50 + (s[d] / max[d]) * 50);   // % toward first letter
+    type += pct[d] >= 50 ? POLES[d][0] : POLES[d][1];
+  }
+  return { type, pct };
+}
+
+function renderType(type, pct) {
+  const [nick, desc, str, weak, careers] = TYPES[type];
+  $("rType").textContent = type; $("rNick").textContent = nick; $("rDesc").textContent = desc;
+  $("rStr").innerHTML = str.map(x => `<li>${x}</li>`).join("");
+  $("rWeak").innerHTML = weak.map(x => `<li>${x}</li>`).join("");
+  $("rCareers").innerHTML = careers.map(x => `<span class="chip">${x}</span>`).join("");
+  $("rBars").classList.toggle("hidden", !pct);
+  if (pct) {
+    $("rBars").innerHTML = Object.keys(POLES).map(d => {
+      const [a, b, an, bn, ca, cb] = POLES[d], p = pct[d], first = p >= 50;
+      const w = Math.abs(p - 50), left = first ? 50 - w : 50;
+      return `<div class="bar"><div class="ends"><span style="color:var(${ca})">${an} ${p}%</span><span style="color:var(${cb})">${100 - p}% ${bn}</span></div>
+        <div class="track"><div class="fill" style="left:${left}%;width:${w}%;background:var(${first ? ca : cb})"></div><div class="mid"></div></div></div>`;
+    }).join("");
+  }
+  document.querySelectorAll("#allTypes button").forEach(b => b.classList.toggle("me", b.textContent === type));
+}
+
+let myResult = null;
+function showResult() {
+  myResult = score();
+  renderType(myResult.type, myResult.pct);
+  show("result");
+}
+
+$("allTypes").innerHTML = Object.keys(TYPES).map(t => `<button>${t}</button>`).join("");
+$("allTypes").onclick = e => {
+  if (e.target.tagName !== "BUTTON") return;
+  const t = e.target.textContent;
+  if (myResult && t === myResult.type) renderType(t, myResult.pct); else renderType(t, null);
+  $("rType").scrollIntoView({ behavior: "smooth", block: "center" });
+};
+
+$("startBtn").onclick = () => { answers.fill(null); idx = 0; save(); show("quiz"); renderQ(); };
+$("resumeBtn").onclick = () => { idx = Math.max(0, answers.findIndex(a => a === null)); show("quiz"); renderQ(); };
+$("backBtn").onclick = () => { if (idx > 0) { idx--; renderQ(); } };
+$("nextBtn").onclick = next;
+$("retakeBtn").onclick = () => { answers.fill(null); save(); show("intro"); $("resumeBtn").classList.add("hidden"); };
+$("shareBtn").onclick = () => {
+  const { type, pct } = myResult;
+  const txt = `My MBTI type is ${type} — ${TYPES[type][0]}. ` +
+    Object.keys(POLES).map(d => { const p = pct[d]; return p >= 50 ? `${POLES[d][0]} ${p}%` : `${POLES[d][1]} ${100 - p}%`; }).join(" · ") +
+    ` ${location.href}`;
+  navigator.clipboard?.writeText(txt).then(() => { $("shareBtn").textContent = "Copied!"; setTimeout(() => $("shareBtn").textContent = "Copy result", 1500); });
+};
+document.addEventListener("keydown", e => {
+  if ($("quiz").classList.contains("hidden")) return;
+  const k = parseInt(e.key, 10);
+  if (k >= 1 && k <= 7) { answers[idx] = k - 4; save(); renderQ(); setTimeout(next, 180); }
+  if (e.key === "ArrowLeft") $("backBtn").click();
+  if (e.key === "ArrowRight") next();
+});
+
+const saved = load();
+if (saved) {
+  answers = saved;
+  if (saved.every(a => a !== null)) showResult();
+  else if (saved.some(a => a !== null)) $("resumeBtn").classList.remove("hidden");
+}
+</script>
+</body>
+</html>
