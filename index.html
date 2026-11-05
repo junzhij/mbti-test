@@ -37,13 +37,22 @@
   .scale .lbl { font-size: .85rem; color: var(--muted); width: 70px; }
   .scale .lbl.r { text-align: right; }
   .dots { display: flex; gap: 10px; align-items: center; flex: 1; justify-content: center; }
-  .dot { border-radius: 50%; border: 2px solid var(--line); background: transparent; cursor: pointer; transition: transform .1s, background .15s, border-color .15s; }
-  .dot:hover { transform: scale(1.08); border-color: var(--accent); }
-  .dot.sel { background: var(--accent); border-color: var(--accent); }
+  .opt { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 56px; }
+  .opt small { font-size: .68rem; color: var(--muted); text-align: center; line-height: 1.15; min-height: 2.3em; }
+  .opt.sel small { color: var(--ink); font-weight: 700; }
+  .dot { --c: var(--muted); border-radius: 50%; border: 3px solid var(--c); background: transparent; cursor: pointer;
+         display: grid; place-items: center; color: #fff; font-weight: 800; padding: 0;
+         transition: transform .12s, background .15s, box-shadow .15s; }
+  .dot.neg { --c: #e8590c; } .dot.pos { --c: #2f9e44; }
+  @media (hover: hover) { .dot:hover { transform: scale(1.08); background: color-mix(in srgb, var(--c) 18%, transparent); } }
+  .dot.sel { background: var(--c); transform: scale(1.12); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 30%, transparent); }
+  .dot.sel::after { content: "✓"; font-size: 1rem; }
   .dot[data-v="-3"], .dot[data-v="3"] { width: 46px; height: 46px; }
   .dot[data-v="-2"], .dot[data-v="2"] { width: 38px; height: 38px; }
-  .dot[data-v="-1"], .dot[data-v="1"] { width: 30px; height: 30px; }
-  .dot[data-v="0"] { width: 24px; height: 24px; }
+  .dot[data-v="-1"], .dot[data-v="1"] { width: 32px; height: 32px; }
+  .dot[data-v="0"] { width: 28px; height: 28px; }
+  .dotrow { display: flex; align-items: center; height: 52px; }
+  .chosen { text-align: center; margin-top: 14px; font-weight: 600; min-height: 1.5em; color: var(--accent); }
   .nav { display: flex; justify-content: space-between; margin-top: 30px; }
 
   .type { font-size: 4rem; font-weight: 800; letter-spacing: .06em; margin: 0; line-height: 1; }
@@ -65,7 +74,12 @@
   @media (max-width: 560px) {
     .grid2 { grid-template-columns: 1fr; }
     .scale .lbl { display: none; }
-    .dots { gap: 6px; }
+    .dots { gap: 2px; }
+    .card { padding: 22px 16px; }
+    .opt { width: 42px; }
+    .dot[data-v="-3"], .dot[data-v="3"] { width: 40px; height: 40px; }
+    .dot[data-v="-2"], .dot[data-v="2"] { width: 34px; height: 34px; }
+    .opt small { font-size: .6rem; }
     .type { font-size: 3rem; }
   }
 </style>
@@ -102,6 +116,7 @@
       <div class="dots" id="dots"></div>
       <span class="lbl r">Agree</span>
     </div>
+    <div class="chosen" id="chosen"></div>
     <div class="nav">
       <button class="btn ghost" id="backBtn">← Back</button>
       <button class="btn" id="nextBtn" disabled>Next →</button>
@@ -220,17 +235,37 @@ function renderQ() {
   $("bar").style.width = (done / QUESTIONS.length * 100) + "%";
   $("qtext").textContent = text;
   const dots = $("dots"); dots.innerHTML = "";
+  const NAMES = ["Strongly disagree", "Disagree", "Slightly disagree", "Neutral", "Slightly agree", "Agree", "Strongly agree"];
+  const SHORT = ["Strongly disagree", "Disagree", "Slightly", "Neutral", "Slightly", "Agree", "Strongly agree"];
   [-3, -2, -1, 0, 1, 2, 3].forEach(v => {
+    const sel = answers[idx] === v;
+    const wrap = document.createElement("div");
+    wrap.className = "opt" + (sel ? " sel" : "");
+    const row = document.createElement("div"); row.className = "dotrow";
     const b = document.createElement("button");
-    b.className = "dot" + (answers[idx] === v ? " sel" : "");
+    b.className = "dot" + (v < 0 ? " neg" : v > 0 ? " pos" : "") + (sel ? " sel" : "");
     b.dataset.v = v;
-    b.setAttribute("aria-label", ["Strongly disagree", "Disagree", "Slightly disagree", "Neutral", "Slightly agree", "Agree", "Strongly agree"][v + 3]);
-    b.onclick = () => { answers[idx] = v; save(); renderQ(); setTimeout(next, 180); };
-    dots.appendChild(b);
+    b.setAttribute("aria-label", NAMES[v + 3]);
+    b.setAttribute("aria-pressed", sel);
+    b.onclick = () => pick(v);
+    row.appendChild(b);
+    const s = document.createElement("small"); s.textContent = SHORT[v + 3];
+    s.onclick = () => pick(v);
+    wrap.append(row, s);
+    dots.appendChild(wrap);
   });
+  $("chosen").textContent = answers[idx] === null ? "" : "Your answer: " + NAMES[answers[idx] + 3];
   $("backBtn").disabled = idx === 0;
   $("nextBtn").disabled = answers[idx] === null;
   $("nextBtn").textContent = idx === QUESTIONS.length - 1 ? "See result →" : "Next →";
+}
+
+let advanceTimer = null;
+function pick(v) {
+  answers[idx] = v; save(); renderQ();
+  clearTimeout(advanceTimer);
+  const at = idx;
+  advanceTimer = setTimeout(() => { if (idx === at) next(); }, 550);
 }
 
 function next() {
@@ -302,7 +337,7 @@ $("shareBtn").onclick = () => {
 document.addEventListener("keydown", e => {
   if ($("quiz").classList.contains("hidden")) return;
   const k = parseInt(e.key, 10);
-  if (k >= 1 && k <= 7) { answers[idx] = k - 4; save(); renderQ(); setTimeout(next, 180); }
+  if (k >= 1 && k <= 7) pick(k - 4);
   if (e.key === "ArrowLeft") $("backBtn").click();
   if (e.key === "ArrowRight") next();
 });
