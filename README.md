@@ -1,4 +1,4 @@
-# MBTI Personality Test
+# Four Letters: MBTI Personality Test
 
 A free, single-page personality test based on the four Myers–Briggs dimensions (E/I, S/N, T/F, J/P).
 
@@ -9,5 +9,7 @@ A free, single-page personality test based on the four Myers–Briggs dimensions
 - Keyboard shortcuts: `1`–`7` to answer, `←` / `→` to move
 
 **Live site:** https://junzhij.github.io/mbti-test/
+
+Typeface: [Bricolage Grotesque](https://github.com/ateliertriay/bricolage), SIL Open Font License (see `fonts/OFL.txt`).
 
 > This is an informal self-reflection tool, not the official MBTI® assessment.

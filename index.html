@@ -3,154 +3,251 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MBTI Personality Test</title>
-<meta name="description" content="A free 40-question personality test based on the four MBTI dimensions.">
+<title>Four Letters: a free MBTI-style personality test</title>
+<meta name="description" content="Answer 40 short statements and find out which of the 16 personality types fits you best.">
+<meta property="og:title" content="Four Letters: a free MBTI-style personality test">
+<meta property="og:description" content="Answer 40 short statements and find out which of the 16 personality types fits you best.">
+<meta name="theme-color" content="#EEF0F6">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Crect width='9' height='9' rx='2' fill='%23CC6E00'/%3E%3Crect x='11' width='9' height='9' rx='2' fill='%233451D1'/%3E%3Crect y='11' width='9' height='9' rx='2' fill='%239C36B5'/%3E%3Crect x='11' y='11' width='9' height='9' rx='2' fill='%230B8A8A'/%3E%3C/svg%3E">
+<link rel="preload" href="fonts/bricolage.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  @font-face {
+    font-family: "Bricolage";
+    src: url("fonts/bricolage.woff2") format("woff2");
+    font-weight: 200 800; font-stretch: 75% 100%; font-display: swap;
+  }
   :root {
-    --bg: #f6f5f1; --card: #ffffff; --ink: #1f2328; --muted: #6b7280; --line: #e5e3dc;
-    --accent: #3b5bdb; --accent-soft: #e7ecff;
-    --e: #e8590c; --i: #1971c2; --s: #2b8a3e; --n: #9c36b5; --t: #0b7285; --f: #c2255c; --j: #5c940d; --p: #e67700;
+    --bg: #EEF0F6; --paper: #FFFFFF; --ink: #171A33; --muted: #5B6080; --line: #D7DAE7;
+    /* one colour per dimension, used everywhere that dimension appears */
+    --ei: #CC6E00; --sn: #3451D1; --tf: #9C36B5; --jp: #0B8A8A;
+    /* answer scale */
+    --no: #D9485F; --yes: #2B9348;
+    --font: "Bricolage", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   @media (prefers-color-scheme: dark) {
-    :root { --bg: #15171c; --card: #1e2128; --ink: #e8e9ec; --muted: #9aa0aa; --line: #2e323b; --accent: #748ffc; --accent-soft: #252d4a; }
+    :root { --bg: #11132A; --paper: #1A1D3A; --ink: #ECEEFB; --muted: #A3A8C8; --line: #2D3156; }
   }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-         background: var(--bg); color: var(--ink); line-height: 1.55; }
-  .wrap { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
-  header h1 { font-size: 2rem; margin: 0 0 6px; letter-spacing: -0.02em; }
-  header p { margin: 0; color: var(--muted); }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 28px; margin-top: 24px; }
-  .btn { appearance: none; border: 0; background: var(--accent); color: #fff; font-size: 1rem; font-weight: 600;
-         padding: 12px 22px; border-radius: 10px; cursor: pointer; }
-  .btn:hover { filter: brightness(1.08); }
-  .btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--line); }
-  .btn:disabled { opacity: .4; cursor: not-allowed; }
-  .hidden { display: none !important; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font);
+         font-size: 17px; line-height: 1.55; font-optical-sizing: auto; }
+  :focus-visible { outline: 3px solid var(--sn); outline-offset: 3px; border-radius: 6px; }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 20px 20px 72px; }
+  h1, h2, h3, h4 { line-height: 1.15; letter-spacing: -0.02em; }
 
-  .progress { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; margin: 8px 0 4px; }
-  .progress > div { height: 100%; background: var(--accent); width: 0; transition: width .25s; }
-  .meta { display: flex; justify-content: space-between; color: var(--muted); font-size: .9rem; }
+  /* brand */
+  .brand { all: unset; display: inline-flex; align-items: center; gap: 10px; font-weight: 700; font-size: 17px; cursor: pointer; }
+  .brand .mark { display: grid; grid-template-columns: repeat(2, 9px); gap: 2px; }
+  .brand .mark i { width: 9px; height: 9px; border-radius: 2px; }
 
-  .q { font-size: 1.25rem; font-weight: 600; margin: 22px 0 26px; min-height: 3.2em; }
-  .scale { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .scale .lbl { font-size: .85rem; color: var(--muted); width: 70px; }
-  .scale .lbl.r { text-align: right; }
-  .dots { display: flex; gap: 10px; align-items: center; flex: 1; justify-content: center; }
-  .opt { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 56px; }
-  .opt small { font-size: .68rem; color: var(--muted); text-align: center; line-height: 1.15; min-height: 2.3em; }
+  /* the four letter tiles: the signature element */
+  .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .tile { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+  .face { position: relative; width: 100%; aspect-ratio: 4 / 5; border-radius: 18px; background: var(--c);
+          display: grid; place-items: center; overflow: hidden; color: #fff;
+          font-weight: 800; font-stretch: 85%; font-size: clamp(54px, 17vw, 112px); line-height: 1; }
+  .face::before { /* split-flap seam, sits behind the letter */
+    content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; background: rgba(0,0,0,.14); }
+  .face::after { /* hinge notches */
+    content: ""; position: absolute; left: -5px; right: -5px; top: 50%; height: 10px; margin-top: -5px;
+    background: radial-gradient(circle at 5px 50%, var(--bg) 4.5px, transparent 5px),
+                radial-gradient(circle at calc(100% - 5px) 50%, var(--bg) 4.5px, transparent 5px); }
+  .face .ch { display: block; position: relative; z-index: 1; }
+  .cap { font-size: 14px; color: var(--muted); text-align: center; line-height: 1.3; }
+  .cap b { color: var(--ink); font-weight: 700; }
+
+  /* buttons */
+  .btn { font: inherit; font-weight: 650; font-size: 17px; border-radius: 999px; padding: 13px 26px;
+         border: 2px solid var(--ink); background: var(--ink); color: var(--bg); cursor: pointer; }
+  .btn.ghost { background: transparent; color: var(--ink); }
+  .btn:disabled { opacity: .3; cursor: not-allowed; }
+  @media (hover: hover) { .btn:not(:disabled):hover { transform: translateY(-1px); } }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  /* intro */
+  .hero .tiles { margin-top: 44px; }
+  .hero h1 { font-size: clamp(38px, 8.5vw, 56px); font-weight: 760; letter-spacing: -0.035em; line-height: 1.02; margin: 40px 0 14px; }
+  .hero .lede { font-size: 19px; color: var(--muted); max-width: 32em; margin: 0 0 28px; }
+  .dims { margin-top: 64px; }
+  .dims h2 { font-size: 27px; font-weight: 700; margin: 0 0 12px; }
+  .dims ul { list-style: none; margin: 0; padding: 0; }
+  .dims li { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; align-items: center; padding: 16px 0; border-top: 1.5px solid var(--line); }
+  .dims .pair { display: flex; gap: 4px; grid-row: span 2; }
+  .dims .pair span { width: 34px; height: 40px; border-radius: 8px; background: var(--c); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 21px; }
+  .dims .pair span + span { background: transparent; color: var(--c); box-shadow: inset 0 0 0 2px var(--c); }
+  .dims strong { font-weight: 650; }
+  .dims small { color: var(--muted); font-size: 15px; }
+
+  /* quiz */
+  .quiz { background: var(--paper); border-radius: 28px; padding: 28px; margin-top: 28px;
+          box-shadow: 0 24px 48px -28px rgba(23, 26, 51, .35); }
+  .count { font-size: 15px; color: var(--muted); }
+  .progress { height: 6px; background: var(--line); border-radius: 99px; overflow: hidden; margin-top: 8px; }
+  .progress > div { height: 100%; background: var(--ink); width: 0; transition: width .3s ease; }
+  .q { font-size: 27px; font-weight: 650; letter-spacing: -0.015em; line-height: 1.25; margin: 28px 0 30px; min-height: 3.75em; }
+  .scale { display: flex; justify-content: center; gap: 4px; }
+  .opt { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 74px; cursor: pointer; }
+  .opt small { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.15; min-height: 2.3em; }
   .opt.sel small { color: var(--ink); font-weight: 700; }
+  .dotrow { display: flex; align-items: center; height: 62px; }
   .dot { --c: var(--muted); border-radius: 50%; border: 3px solid var(--c); background: transparent; cursor: pointer;
-         display: grid; place-items: center; color: #fff; font-weight: 800; padding: 0;
+         display: grid; place-items: center; color: #fff; font: inherit; font-weight: 800; padding: 0;
          transition: transform .12s, background .15s, box-shadow .15s; }
-  .dot.neg { --c: #e8590c; } .dot.pos { --c: #2f9e44; }
-  @media (hover: hover) { .dot:hover { transform: scale(1.08); background: color-mix(in srgb, var(--c) 18%, transparent); } }
-  .dot.sel { background: var(--c); transform: scale(1.12); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 30%, transparent); }
-  .dot.sel::after { content: "✓"; font-size: 1rem; }
-  .dot[data-v="-3"], .dot[data-v="3"] { width: 46px; height: 46px; }
-  .dot[data-v="-2"], .dot[data-v="2"] { width: 38px; height: 38px; }
-  .dot[data-v="-1"], .dot[data-v="1"] { width: 32px; height: 32px; }
-  .dot[data-v="0"] { width: 28px; height: 28px; }
-  .dotrow { display: flex; align-items: center; height: 52px; }
-  .chosen { text-align: center; margin-top: 14px; font-weight: 600; min-height: 1.5em; color: var(--accent); }
-  .nav { display: flex; justify-content: space-between; margin-top: 30px; }
+  .dot.neg { --c: var(--no); } .dot.pos { --c: var(--yes); }
+  @media (hover: hover) { .dot:hover { transform: scale(1.08); background: color-mix(in srgb, var(--c) 16%, transparent); } }
+  .dot.sel { background: var(--c); transform: scale(1.12); box-shadow: 0 0 0 5px color-mix(in srgb, var(--c) 25%, transparent); }
+  .dot.sel::after { content: "✓"; font-size: 17px; }
+  .dot[data-v="-3"], .dot[data-v="3"] { width: 56px; height: 56px; }
+  .dot[data-v="-2"], .dot[data-v="2"] { width: 46px; height: 46px; }
+  .dot[data-v="-1"], .dot[data-v="1"] { width: 38px; height: 38px; }
+  .dot[data-v="0"] { width: 30px; height: 30px; }
+  .chosen { text-align: center; margin-top: 16px; font-weight: 650; min-height: 1.55em; }
+  .nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 28px; }
 
-  .type { font-size: 4rem; font-weight: 800; letter-spacing: .06em; margin: 0; line-height: 1; }
-  .nick { font-size: 1.3rem; color: var(--accent); font-weight: 600; margin: 8px 0 16px; }
-  .bars { margin: 24px 0; display: grid; gap: 16px; }
-  .bar .ends { display: flex; justify-content: space-between; font-size: .9rem; font-weight: 600; }
-  .bar .track { position: relative; height: 12px; border-radius: 99px; background: var(--line); margin-top: 6px; overflow: hidden; }
-  .bar .fill { position: absolute; top: 0; height: 100%; border-radius: 99px; }
-  .bar .mid { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 2px; background: var(--card); }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
-  .grid2 h3 { margin: 0 0 6px; font-size: 1rem; }
-  .grid2 ul { margin: 0; padding-left: 18px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-  .chip { background: var(--accent-soft); color: var(--accent); padding: 4px 10px; border-radius: 99px; font-size: .85rem; font-weight: 600; }
-  .types { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
-  .types button { background: var(--bg); border: 1px solid var(--line); color: var(--ink); border-radius: 10px; padding: 10px 4px; cursor: pointer; font-weight: 700; }
-  .types button.me { background: var(--accent); color: #fff; border-color: var(--accent); }
-  .note { font-size: .82rem; color: var(--muted); margin-top: 28px; }
+  /* result */
+  .result .tiles { margin-top: 36px; }
+  .result .cap { font-size: 15px; }
+  .nick { font-size: clamp(36px, 8vw, 53px); font-weight: 760; letter-spacing: -0.035em; margin: 36px 0 10px; }
+  .result .lede { font-size: 19px; margin: 0 0 24px; max-width: 34em; }
+  .result h3 { font-size: 21px; font-weight: 700; margin: 52px 0 6px; }
+  .panel { background: var(--paper); border-radius: 22px; padding: 6px 22px; margin-top: 14px; }
+  .fader { padding: 16px 0 18px; }
+  .fader + .fader { border-top: 1.5px solid var(--line); }
+  .fader .ends { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; color: var(--muted); }
+  .fader .ends .win { color: var(--c); font-weight: 750; }
+  .track { position: relative; height: 8px; border-radius: 99px; background: var(--line); margin-top: 14px; }
+  .track .mid { position: absolute; left: 50%; top: -5px; bottom: -5px; width: 2px; margin-left: -1px; background: var(--muted); opacity: .35; }
+  .track .fill { position: absolute; top: 0; bottom: 0; left: 50%; width: 0; border-radius: 99px; background: var(--c);
+                 transition: left .9s cubic-bezier(.2,.8,.2,1), width .9s cubic-bezier(.2,.8,.2,1); }
+  .track .knob { position: absolute; top: 50%; left: 50%; width: 24px; height: 24px; border-radius: 50%;
+                 background: var(--paper); border: 6px solid var(--c); transform: translate(-50%, -50%);
+                 transition: left .9s cubic-bezier(.2,.8,.2,1); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; }
+  .two ul { margin: 8px 0 0; padding-left: 20px; }
+  .two li { margin: 4px 0; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip { border: 1.5px solid var(--ink); padding: 5px 14px; border-radius: 999px; font-size: 15px; font-weight: 600; }
+  .hint { color: var(--muted); margin: 0; }
+  .group { margin-top: 22px; }
+  .group h4 { font-size: 17px; font-weight: 700; margin: 0 0 10px; }
+  .group h4 span { color: var(--muted); font-weight: 500; margin-left: 6px; }
+  .typegrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tbtn { font: inherit; background: var(--paper); color: var(--ink); border: 2px solid transparent; border-radius: 14px;
+          padding: 12px 4px; cursor: pointer; text-align: center; min-width: 0; }
+  .tbtn b { display: block; font-size: 19px; font-weight: 750; letter-spacing: .02em; }
+  .tbtn small { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tbtn.me { background: var(--ink); color: var(--bg); }
+  .tbtn.me small { color: inherit; opacity: .8; }
+  .tbtn[aria-expanded="true"] { border-color: var(--ink); }
+  .peek { background: var(--paper); border-radius: 18px; padding: 18px 20px; margin-top: 8px; }
+  .peek h5 { font-size: 19px; font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; }
+  .peek p { margin: 6px 0 0; font-size: 16px; }
+  .peek p.meta { color: var(--muted); font-size: 15px; }
+  .note { font-size: 14px; color: var(--muted); margin-top: 72px; max-width: 40em; }
+
   @media (max-width: 560px) {
-    .grid2 { grid-template-columns: 1fr; }
-    .scale .lbl { display: none; }
-    .dots { gap: 2px; }
-    .card { padding: 22px 16px; }
-    .opt { width: 42px; }
+    .wrap { padding: 16px 16px 56px; }
+    .tiles { gap: 7px; }
+    .face { border-radius: 14px; }
+    .cap { font-size: 12px; }
+    .result .cap { font-size: 12.5px; }
+    .quiz { padding: 22px 8px; border-radius: 24px; }
+    .count, .progress, .q { margin-left: 10px; margin-right: 10px; }
+    .q { font-size: 22px; }
+    .nav { padding: 0 10px; }
+    .scale { gap: 0; }
+    .opt { width: 48px; }
+    .opt small { font-size: 10.5px; }
+    .dotrow { height: 50px; }
     .dot[data-v="-3"], .dot[data-v="3"] { width: 40px; height: 40px; }
     .dot[data-v="-2"], .dot[data-v="2"] { width: 34px; height: 34px; }
-    .opt small { font-size: .6rem; }
-    .type { font-size: 3rem; }
+    .dot[data-v="-1"], .dot[data-v="1"] { width: 29px; height: 29px; }
+    .dot[data-v="0"] { width: 25px; height: 25px; }
+    .two { grid-template-columns: 1fr; }
+    .tbtn b { font-size: 16px; }
+    .tbtn small { font-size: 10.5px; }
+    .panel { padding: 4px 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <h1>MBTI Personality Test</h1>
-    <p>40 statements · about 7 minutes · nothing leaves your browser</p>
-  </header>
+  <button class="brand" id="home" aria-label="Four Letters, back to start">
+    <span class="mark" aria-hidden="true"><i style="background:var(--ei)"></i><i style="background:var(--sn)"></i><i style="background:var(--tf)"></i><i style="background:var(--jp)"></i></span>
+    Four Letters
+  </button>
 
   <!-- Intro -->
-  <section id="intro" class="card">
-    <h2 style="margin-top:0">How it works</h2>
-    <p>For each statement, pick how much you agree. Answer as you usually are, not as you'd like to be. There are no right answers.</p>
-    <p>The test scores you on four dimensions:</p>
-    <ul>
-      <li><b>E / I</b> — Extraversion vs. Introversion: where you get your energy</li>
-      <li><b>S / N</b> — Sensing vs. Intuition: how you take in information</li>
-      <li><b>T / F</b> — Thinking vs. Feeling: how you make decisions</li>
-      <li><b>J / P</b> — Judging vs. Perceiving: how you approach structure</li>
-    </ul>
-    <button class="btn" id="startBtn">Start the test</button>
-    <button class="btn ghost hidden" id="resumeBtn" style="margin-left:8px">Resume</button>
-  </section>
+  <main id="intro" class="hero">
+    <div class="tiles" id="heroTiles" aria-hidden="true"></div>
+    <h1>Four letters, sixteen ways to be.</h1>
+    <p class="lede">Answer 40 short statements and find out which of the 16 personality types fits you best. It takes about seven minutes, and your answers never leave this device.</p>
+    <div class="actions">
+      <button class="btn" id="startBtn">Start the test</button>
+      <button class="btn ghost" id="resumeBtn" hidden></button>
+    </div>
+
+    <section class="dims">
+      <h2>What the letters measure</h2>
+      <ul>
+        <li style="--c:var(--ei)"><span class="pair"><span>E</span><span>I</span></span><strong>Extraversion or Introversion</strong><small>Where you get your energy</small></li>
+        <li style="--c:var(--sn)"><span class="pair"><span>S</span><span>N</span></span><strong>Sensing or Intuition</strong><small>How you take in information</small></li>
+        <li style="--c:var(--tf)"><span class="pair"><span>T</span><span>F</span></span><strong>Thinking or Feeling</strong><small>How you make decisions</small></li>
+        <li style="--c:var(--jp)"><span class="pair"><span>J</span><span>P</span></span><strong>Judging or Perceiving</strong><small>How you handle plans and structure</small></li>
+      </ul>
+    </section>
+  </main>
 
   <!-- Quiz -->
-  <section id="quiz" class="card hidden">
-    <div class="meta"><span id="qnum"></span><span id="pct"></span></div>
+  <main id="quiz" class="quiz" hidden>
+    <div class="count" id="qnum"></div>
     <div class="progress"><div id="bar"></div></div>
-    <div class="q" id="qtext"></div>
-    <div class="scale">
-      <span class="lbl">Disagree</span>
-      <div class="dots" id="dots"></div>
-      <span class="lbl r">Agree</span>
-    </div>
+    <p class="q" id="qtext" aria-live="polite"></p>
+    <div class="scale" id="dots" role="group" aria-label="How much do you agree?"></div>
     <div class="chosen" id="chosen"></div>
     <div class="nav">
-      <button class="btn ghost" id="backBtn">← Back</button>
-      <button class="btn" id="nextBtn" disabled>Next →</button>
+      <button class="btn ghost" id="backBtn">Back</button>
+      <button class="btn" id="nextBtn" disabled>Next</button>
     </div>
-  </section>
+  </main>
 
   <!-- Result -->
-  <section id="result" class="card hidden">
-    <div style="color:var(--muted);font-weight:600">Your type</div>
-    <p class="type" id="rType"></p>
-    <div class="nick" id="rNick"></div>
-    <p id="rDesc"></p>
-    <div class="bars" id="rBars"></div>
-    <div class="grid2">
+  <main id="result" class="result" hidden>
+    <div class="tiles" id="rTiles"></div>
+    <h2 class="nick" id="rNick"></h2>
+    <p class="lede" id="rDesc"></p>
+    <div class="actions">
+      <button class="btn" id="shareBtn">Copy my result</button>
+      <button class="btn ghost" id="retakeBtn">Retake the test</button>
+    </div>
+
+    <h3>How strongly you lean</h3>
+    <p class="hint">The further the dot from the middle, the clearer your preference.</p>
+    <div class="panel" id="rFaders"></div>
+
+    <div class="two">
       <div><h3>Strengths</h3><ul id="rStr"></ul></div>
       <div><h3>Watch out for</h3><ul id="rWeak"></ul></div>
     </div>
-    <h3 style="margin:22px 0 0;font-size:1rem">Careers that often fit</h3>
-    <div class="chips" id="rCareers"></div>
-    <h3 style="margin:26px 0 0;font-size:1rem">Explore all 16 types</h3>
-    <div class="types" id="allTypes"></div>
-    <div class="nav">
-      <button class="btn ghost" id="retakeBtn">Retake test</button>
-      <button class="btn" id="shareBtn">Copy result</button>
-    </div>
-  </section>
 
-  <p class="note">This is an informal self-reflection tool inspired by the Myers–Briggs model. It is not the official MBTI® assessment and should not be used for clinical, hiring, or other high-stakes decisions.</p>
+    <h3>Careers that often fit</h3>
+    <div class="chips" id="rCareers"></div>
+
+    <h3>All 16 types</h3>
+    <p class="hint">Tap a type to read about it.</p>
+    <div id="groups"></div>
+  </main>
+
+  <p class="note">Four Letters is an informal self-reflection tool inspired by the Myers–Briggs model. It is not the official MBTI® assessment, so please don't use it for hiring, clinical or other important decisions.</p>
 </div>
 
 <script>
-// Each question: text, dimension, and which pole "agree" points to.
-const QUESTIONS = [
-  // E / I
+// [statement, dimension, pole that "agree" points to]
+const RAW = [
   ["I feel energized after spending time with a large group of people.", "EI", "E"],
   ["I prefer to think things through quietly before I speak.", "EI", "I"],
   ["I easily start conversations with strangers.", "EI", "E"],
@@ -161,7 +258,6 @@ const QUESTIONS = [
   ["I prefer working on my own over working in a team.", "EI", "I"],
   ["At parties, I tend to stay until the end.", "EI", "E"],
   ["I find phone calls more draining than messages.", "EI", "I"],
-  // S / N
   ["I focus on facts and details more than on the big picture.", "SN", "S"],
   ["I often find myself imagining future possibilities.", "SN", "N"],
   ["I trust experience more than theories.", "SN", "S"],
@@ -172,7 +268,6 @@ const QUESTIONS = [
   ["I get bored with routine and want to try new approaches.", "SN", "N"],
   ["I remember specific details of past events clearly.", "SN", "S"],
   ["I like metaphors and reading between the lines.", "SN", "N"],
-  // T / F
   ["When making decisions, logic matters more to me than feelings.", "TF", "T"],
   ["I consider how my decisions will affect other people's feelings.", "TF", "F"],
   ["I'd rather be honest than tactful.", "TF", "T"],
@@ -183,7 +278,6 @@ const QUESTIONS = [
   ["I'm easily moved by other people's stories.", "TF", "F"],
   ["Fairness means applying the same rules to everyone.", "TF", "T"],
   ["I often follow my heart over my head.", "TF", "F"],
-  // J / P
   ["I like to have a plan and stick to it.", "JP", "J"],
   ["I prefer to keep my options open rather than commit early.", "JP", "P"],
   ["I finish tasks well before the deadline.", "JP", "J"],
@@ -195,6 +289,9 @@ const QUESTIONS = [
   ["I feel uneasy when things are left undecided.", "JP", "J"],
   ["I adapt easily when plans suddenly change.", "JP", "P"],
 ];
+// Interleave the dimensions so consecutive questions don't all measure the same thing.
+const QUESTIONS = [];
+for (let r = 0; r < 10; r++) for (let d = 0; d < 4; d++) QUESTIONS.push(RAW[d * 10 + r]);
 
 const TYPES = {
   INTJ: ["The Architect", "Strategic, independent thinkers who see how systems fit together and enjoy turning long-range visions into workable plans.", ["Strategic planning", "Independent", "High standards", "Decisive"], ["Can seem distant", "Impatient with inefficiency", "Overly critical"], ["Engineer", "Scientist", "Strategist", "Software architect"]],
@@ -214,140 +311,192 @@ const TYPES = {
   ESTP: ["The Entrepreneur", "Energetic, perceptive doers who enjoy action, risk, and solving problems on the spot.", ["Bold", "Practical", "Perceptive", "Sociable"], ["Impatient", "Risk-prone", "Misses the big picture"], ["Sales", "Paramedic", "Entrepreneur", "Athlete"]],
   ESFP: ["The Entertainer", "Spontaneous, lively people who love life, people, and bringing fun into any situation.", ["Fun-loving", "Observant", "Generous", "Excellent people skills"], ["Easily bored", "Avoids long-term planning", "Sensitive"], ["Performer", "Event host", "Tour guide", "Sales"]],
 };
+const GROUPS = [
+  ["Rationals", "NT", ["INTJ", "INTP", "ENTJ", "ENTP"]],
+  ["Idealists", "NF", ["INFJ", "INFP", "ENFJ", "ENFP"]],
+  ["Guardians", "SJ", ["ISTJ", "ISFJ", "ESTJ", "ESFJ"]],
+  ["Artisans", "SP", ["ISTP", "ISFP", "ESTP", "ESFP"]],
+];
+const DIMS = ["EI", "SN", "TF", "JP"];
+const NAMES = { E: "Extraversion", I: "Introversion", S: "Sensing", N: "Intuition", T: "Thinking", F: "Feeling", J: "Judging", P: "Perceiving" };
+const SCALE = ["Strongly disagree", "Disagree", "Slightly disagree", "Neutral", "Slightly agree", "Agree", "Strongly agree"];
+const SCALE_SHORT = ["Strongly disagree", "Disagree", "Slightly", "Neutral", "Slightly", "Agree", "Strongly agree"];
 
-const POLES = { EI: ["E", "I", "Extraversion", "Introversion", "--e", "--i"], SN: ["S", "N", "Sensing", "Intuition", "--s", "--n"],
-                TF: ["T", "F", "Thinking", "Feeling", "--t", "--f"], JP: ["J", "P", "Judging", "Perceiving", "--j", "--p"] };
-
-const STORE = "mbti-answers-v1";
-let answers = new Array(QUESTIONS.length).fill(null);
-let idx = 0;
-
+const STORE = "mbti-answers-v2";
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $ = id => document.getElementById(id);
-function show(id) { ["intro", "quiz", "result"].forEach(s => $(s).classList.toggle("hidden", s !== id)); window.scrollTo(0, 0); }
-function save() { try { localStorage.setItem(STORE, JSON.stringify(answers)); } catch (e) {} }
-function load() { try { const a = JSON.parse(localStorage.getItem(STORE)); if (Array.isArray(a) && a.length === QUESTIONS.length) return a; } catch (e) {} return null; }
+let answers = new Array(QUESTIONS.length).fill(null);
+let idx = 0, myType = null, myPct = null, advanceTimer = null;
 
-function renderQ() {
-  const [text] = QUESTIONS[idx];
-  $("qnum").textContent = `Question ${idx + 1} of ${QUESTIONS.length}`;
-  const done = answers.filter(a => a !== null).length;
-  $("pct").textContent = Math.round(done / QUESTIONS.length * 100) + "%";
-  $("bar").style.width = (done / QUESTIONS.length * 100) + "%";
-  $("qtext").textContent = text;
-  const dots = $("dots"); dots.innerHTML = "";
-  const NAMES = ["Strongly disagree", "Disagree", "Slightly disagree", "Neutral", "Slightly agree", "Agree", "Strongly agree"];
-  const SHORT = ["Strongly disagree", "Disagree", "Slightly", "Neutral", "Slightly", "Agree", "Strongly agree"];
-  [-3, -2, -1, 0, 1, 2, 3].forEach(v => {
-    const sel = answers[idx] === v;
-    const wrap = document.createElement("div");
-    wrap.className = "opt" + (sel ? " sel" : "");
-    const row = document.createElement("div"); row.className = "dotrow";
-    const b = document.createElement("button");
-    b.className = "dot" + (v < 0 ? " neg" : v > 0 ? " pos" : "") + (sel ? " sel" : "");
-    b.dataset.v = v;
-    b.setAttribute("aria-label", NAMES[v + 3]);
-    b.setAttribute("aria-pressed", sel);
-    b.onclick = () => pick(v);
-    row.appendChild(b);
-    const s = document.createElement("small"); s.textContent = SHORT[v + 3];
-    s.onclick = () => pick(v);
-    wrap.append(row, s);
-    dots.appendChild(wrap);
+function save() { try { localStorage.setItem(STORE, JSON.stringify(answers)); } catch (e) {} }
+function load() {
+  try { const a = JSON.parse(localStorage.getItem(STORE)); if (Array.isArray(a) && a.length === QUESTIONS.length) return a; } catch (e) {}
+  return null;
+}
+function show(id) { ["intro", "quiz", "result"].forEach(s => $(s).hidden = s !== id); window.scrollTo(0, 0); }
+const answered = () => answers.filter(a => a !== null).length;
+
+/* ---------- letter tiles ---------- */
+function buildTiles(el, caps) {
+  el.innerHTML = DIMS.map((d, i) =>
+    `<div class="tile" style="--c:var(--${d.toLowerCase()})"><div class="face"><span class="ch">${d[0]}</span></div><div class="cap">${caps[i]}</div></div>`
+  ).join("");
+}
+function spin(el, letters) {
+  const chs = [...el.querySelectorAll(".ch")];
+  if (reduceMotion) { chs.forEach((c, i) => c.textContent = letters[i]); return; }
+  chs.forEach((c, i) => {
+    const pair = DIMS[i]; let n = 0; const stop = 7 + i * 3;
+    const tick = () => {
+      n++;
+      const last = n >= stop;
+      c.textContent = last ? letters[i] : pair[n % 2];
+      c.animate(
+        last ? [{ transform: "translateY(-45%)", opacity: 0 }, { transform: "translateY(6%)", opacity: 1, offset: .7 }, { transform: "none" }]
+             : [{ transform: "translateY(-45%)", opacity: .2 }, { transform: "none", opacity: 1 }],
+        { duration: last ? 340 : 80, easing: "ease-out" });
+      if (!last) setTimeout(tick, 60 + n * 7);
+    };
+    setTimeout(tick, i * 70);
   });
-  $("chosen").textContent = answers[idx] === null ? "" : "Your answer: " + NAMES[answers[idx] + 3];
-  $("backBtn").disabled = idx === 0;
-  $("nextBtn").disabled = answers[idx] === null;
-  $("nextBtn").textContent = idx === QUESTIONS.length - 1 ? "See result →" : "Next →";
 }
 
-let advanceTimer = null;
+/* ---------- intro ---------- */
+function renderIntro() {
+  const done = answered();
+  $("resumeBtn").hidden = done === 0;
+  if (done === QUESTIONS.length) { $("resumeBtn").textContent = `See my result (${score().type})`; $("startBtn").textContent = "Start over"; }
+  else if (done > 0) { $("resumeBtn").textContent = `Continue (${done} of ${QUESTIONS.length} done)`; $("startBtn").textContent = "Start over"; }
+  else { $("startBtn").textContent = "Start the test"; }
+}
+
+/* ---------- quiz ---------- */
+function renderQ() {
+  $("qnum").textContent = `Statement ${idx + 1} of ${QUESTIONS.length}`;
+  $("bar").style.width = (answered() / QUESTIONS.length * 100) + "%";
+  $("qtext").textContent = QUESTIONS[idx][0];
+  const cur = answers[idx];
+  $("dots").innerHTML = [-3, -2, -1, 0, 1, 2, 3].map(v => {
+    const sel = cur === v, side = v < 0 ? "neg" : v > 0 ? "pos" : "";
+    return `<div class="opt${sel ? " sel" : ""}" data-v="${v}"><div class="dotrow"><button class="dot ${side}${sel ? " sel" : ""}" data-v="${v}" aria-label="${SCALE[v + 3]}" aria-pressed="${sel}"></button></div><small>${SCALE_SHORT[v + 3]}</small></div>`;
+  }).join("");
+  const ch = $("chosen");
+  ch.textContent = cur === null ? "" : "Your answer: " + SCALE[cur + 3];
+  ch.style.color = cur === null ? "" : cur < 0 ? "var(--no)" : cur > 0 ? "var(--yes)" : "var(--muted)";
+  $("backBtn").disabled = idx === 0;
+  $("nextBtn").disabled = cur === null;
+  $("nextBtn").textContent = idx === QUESTIONS.length - 1 ? "See my result" : "Next";
+}
 function pick(v) {
   answers[idx] = v; save(); renderQ();
   clearTimeout(advanceTimer);
   const at = idx;
   advanceTimer = setTimeout(() => { if (idx === at) next(); }, 550);
 }
-
 function next() {
   if (answers[idx] === null) return;
   if (idx < QUESTIONS.length - 1) { idx++; renderQ(); }
   else if (answers.every(a => a !== null)) showResult();
   else { idx = answers.findIndex(a => a === null); renderQ(); }
 }
+$("dots").addEventListener("click", e => { const o = e.target.closest("[data-v]"); if (o) pick(+o.dataset.v); });
 
+/* ---------- scoring ---------- */
 function score() {
   const s = { EI: 0, SN: 0, TF: 0, JP: 0 }, max = { EI: 0, SN: 0, TF: 0, JP: 0 };
-  QUESTIONS.forEach(([, dim, pole], i) => {
-    const sign = pole === POLES[dim][0] ? 1 : -1;  // positive = first letter
-    s[dim] += sign * (answers[i] || 0); max[dim] += 3;
-  });
+  QUESTIONS.forEach(([, dim, pole], i) => { s[dim] += (pole === dim[0] ? 1 : -1) * (answers[i] || 0); max[dim] += 3; });
   const pct = {}; let type = "";
-  for (const d in s) {
-    pct[d] = Math.round(50 + (s[d] / max[d]) * 50);   // % toward first letter
-    type += pct[d] >= 50 ? POLES[d][0] : POLES[d][1];
-  }
-  return { type, pct };
+  DIMS.forEach(d => { pct[d] = Math.round(50 + s[d] / max[d] * 50); type += pct[d] >= 50 ? d[0] : d[1]; });
+  return { type, pct }; // pct = share toward the first letter of each pair
 }
 
-function renderType(type, pct) {
-  const [nick, desc, str, weak, careers] = TYPES[type];
-  $("rType").textContent = type; $("rNick").textContent = nick; $("rDesc").textContent = desc;
+/* ---------- result ---------- */
+function showResult() {
+  ({ type: myType, pct: myPct } = score());
+  const [nick, desc, str, weak, careers] = TYPES[myType];
+  show("result");
+  buildTiles($("rTiles"), DIMS.map((d, i) => {
+    const p = myPct[d] >= 50 ? myPct[d] : 100 - myPct[d];
+    return `<b>${p}%</b><br>${NAMES[myType[i]]}`;
+  }));
+  spin($("rTiles"), myType);
+  $("rNick").textContent = `${myType}, ${nick.replace(/^The /, "the ")}`;
+  $("rDesc").textContent = desc;
   $("rStr").innerHTML = str.map(x => `<li>${x}</li>`).join("");
   $("rWeak").innerHTML = weak.map(x => `<li>${x}</li>`).join("");
   $("rCareers").innerHTML = careers.map(x => `<span class="chip">${x}</span>`).join("");
-  $("rBars").classList.toggle("hidden", !pct);
-  if (pct) {
-    $("rBars").innerHTML = Object.keys(POLES).map(d => {
-      const [a, b, an, bn, ca, cb] = POLES[d], p = pct[d], first = p >= 50;
-      const w = Math.abs(p - 50), left = first ? 50 - w : 50;
-      return `<div class="bar"><div class="ends"><span style="color:var(${ca})">${an} ${p}%</span><span style="color:var(${cb})">${100 - p}% ${bn}</span></div>
-        <div class="track"><div class="fill" style="left:${left}%;width:${w}%;background:var(${first ? ca : cb})"></div><div class="mid"></div></div></div>`;
-    }).join("");
-  }
-  document.querySelectorAll("#allTypes button").forEach(b => b.classList.toggle("me", b.textContent === type));
+
+  $("rFaders").innerHTML = DIMS.map(d => {
+    const p = myPct[d], first = p >= 50;
+    return `<div class="fader" style="--c:var(--${d.toLowerCase()})">
+      <div class="ends"><span class="${first ? "win" : ""}">${NAMES[d[0]]} ${p}%</span><span class="${first ? "" : "win"}">${100 - p}% ${NAMES[d[1]]}</span></div>
+      <div class="track"><div class="mid"></div><div class="fill" data-pos="${100 - p}"></div><div class="knob" data-pos="${100 - p}"></div></div></div>`;
+  }).join("");
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    $("rFaders").querySelectorAll(".track").forEach(t => {
+      const pos = +t.querySelector(".knob").dataset.pos;
+      t.querySelector(".knob").style.left = pos + "%";
+      const f = t.querySelector(".fill"); f.style.left = Math.min(50, pos) + "%"; f.style.width = Math.abs(pos - 50) + "%";
+    });
+  }));
+
+  $("groups").innerHTML = GROUPS.map(([name, code, list]) =>
+    `<div class="group"><h4>${name}<span>${code}</span></h4><div class="typegrid">${list.map(t =>
+      `<button class="tbtn${t === myType ? " me" : ""}" data-t="${t}" aria-expanded="false"><b>${t}</b><small>${t === myType ? "You" : TYPES[t][0].replace(/^The /, "")}</small></button>`
+    ).join("")}</div></div>`).join("");
 }
 
-let myResult = null;
-function showResult() {
-  myResult = score();
-  renderType(myResult.type, myResult.pct);
-  show("result");
-}
+$("groups").addEventListener("click", e => {
+  const b = e.target.closest(".tbtn"); if (!b) return;
+  const open = b.getAttribute("aria-expanded") === "true";
+  $("groups").querySelectorAll(".tbtn").forEach(x => x.setAttribute("aria-expanded", "false"));
+  $("groups").querySelectorAll(".peek").forEach(x => x.remove());
+  if (open) return;
+  const t = b.dataset.t, [nick, desc, str, weak, careers] = TYPES[t];
+  b.setAttribute("aria-expanded", "true");
+  const lc = a => a.join(", ").toLowerCase();
+  b.closest(".group").insertAdjacentHTML("beforeend",
+    `<div class="peek"><h5>${t}, ${nick.replace(/^The /, "the ")}</h5><p>${desc}</p>
+     <p class="meta">Strengths: ${lc(str)}. Watch out for: ${lc(weak)}.</p>
+     <p class="meta">Careers that often fit: ${lc(careers)}.</p></div>`);
+});
 
-$("allTypes").innerHTML = Object.keys(TYPES).map(t => `<button>${t}</button>`).join("");
-$("allTypes").onclick = e => {
-  if (e.target.tagName !== "BUTTON") return;
-  const t = e.target.textContent;
-  if (myResult && t === myResult.type) renderType(t, myResult.pct); else renderType(t, null);
-  $("rType").scrollIntoView({ behavior: "smooth", block: "center" });
-};
-
+/* ---------- buttons ---------- */
+$("home").onclick = () => { show("intro"); renderIntro(); };
 $("startBtn").onclick = () => { answers.fill(null); idx = 0; save(); show("quiz"); renderQ(); };
-$("resumeBtn").onclick = () => { idx = Math.max(0, answers.findIndex(a => a === null)); show("quiz"); renderQ(); };
-$("backBtn").onclick = () => { if (idx > 0) { idx--; renderQ(); } };
-$("nextBtn").onclick = next;
-$("retakeBtn").onclick = () => { answers.fill(null); save(); show("intro"); $("resumeBtn").classList.add("hidden"); };
-$("shareBtn").onclick = () => {
-  const { type, pct } = myResult;
-  const txt = `My MBTI type is ${type} — ${TYPES[type][0]}. ` +
-    Object.keys(POLES).map(d => { const p = pct[d]; return p >= 50 ? `${POLES[d][0]} ${p}%` : `${POLES[d][1]} ${100 - p}%`; }).join(" · ") +
-    ` ${location.href}`;
-  navigator.clipboard?.writeText(txt).then(() => { $("shareBtn").textContent = "Copied!"; setTimeout(() => $("shareBtn").textContent = "Copy result", 1500); });
+$("resumeBtn").onclick = () => {
+  if (answers.every(a => a !== null)) return showResult();
+  idx = Math.max(0, answers.findIndex(a => a === null)); show("quiz"); renderQ();
 };
+$("backBtn").onclick = () => { clearTimeout(advanceTimer); if (idx > 0) { idx--; renderQ(); } };
+$("nextBtn").onclick = () => { clearTimeout(advanceTimer); next(); };
+$("retakeBtn").onclick = () => { answers.fill(null); idx = 0; save(); show("quiz"); renderQ(); };
+$("shareBtn").onclick = () => {
+  const parts = DIMS.map(d => myPct[d] >= 50 ? `${d[0]} ${myPct[d]}%` : `${d[1]} ${100 - myPct[d]}%`).join(", ");
+  const txt = `My personality type is ${myType}, ${TYPES[myType][0].replace(/^The /, "the ")} (${parts}). Take the test: ${location.href.split("#")[0]}`;
+  const done = () => { $("shareBtn").textContent = "Copied"; setTimeout(() => $("shareBtn").textContent = "Copy my result", 1600); };
+  if (navigator.clipboard) navigator.clipboard.writeText(txt).then(done, () => fallbackCopy(txt, done));
+  else fallbackCopy(txt, done);
+};
+function fallbackCopy(txt, done) {
+  const t = document.createElement("textarea"); t.value = txt; document.body.appendChild(t); t.select();
+  try { document.execCommand("copy"); done(); } catch (e) {} t.remove();
+}
 document.addEventListener("keydown", e => {
-  if ($("quiz").classList.contains("hidden")) return;
+  if ($("quiz").hidden) return;
   const k = parseInt(e.key, 10);
   if (k >= 1 && k <= 7) pick(k - 4);
   if (e.key === "ArrowLeft") $("backBtn").click();
-  if (e.key === "ArrowRight") next();
+  if (e.key === "ArrowRight") $("nextBtn").click();
 });
 
+/* ---------- start ---------- */
 const saved = load();
-if (saved) {
-  answers = saved;
-  if (saved.every(a => a !== null)) showResult();
-  else if (saved.some(a => a !== null)) $("resumeBtn").classList.remove("hidden");
-}
+if (saved) answers = saved;
+buildTiles($("heroTiles"), DIMS.map(d => `<b>${d[0]}</b> or <b>${d[1]}</b>`));
+const types = Object.keys(TYPES);
+spin($("heroTiles"), types[Math.floor(Math.random() * types.length)]);
+renderIntro();
 </script>
 </body>
 </html>
